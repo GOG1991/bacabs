@@ -1,0 +1,12 @@
+este archivo es para modificar texto a lo cabron
+
+localserver='/home/algo/tres'.
+pepe pecas pica papas con un pico pepepecas pica papas
+el volcan de sepea lariata se esta queiensave que
+nombre='n0hola';
+nombreuser='home/cuatro'
+pepe='torindo'
+puto='polvoron' bbb
+perrad la pelicula
+/usr/local
+pepito='/per/bash'
