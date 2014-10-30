@@ -2,6 +2,19 @@
 #script para realizar dployd
 
 ####################
+#######################################
+
+#variables
+host='';
+nombre_usuario_directorio='';
+nombre_app='';
+nombre_dir_app='';
+nombre_user_bd='';
+passwd_userbd='';
+nombre_base_datos='';
+direccion_gitremoto_app='';
+puerto_nginx='';
+vercion_python='';
 manage='manage.py';
 settings='settings.py';
 requirements='requirements.txt';
@@ -12,7 +25,7 @@ Adirectorio='';
 ###FUNCIONES
 function Limpiar_D()
 {
-	
+	clear
 	rm -r -f config_r/*
 	rm -r -f recurso_app/*
 	rm -r -f config_app/*
@@ -31,6 +44,7 @@ function Exit()
 }
 function Limpiar_CrearD()
 {
+	clear
 	mkdir -p config_r recurso_app config_app
 	rm -r -f config_r/*
 	rm -r -f recurso_app/*
@@ -69,7 +83,10 @@ function ClonarR()
 		
 		echo "la ruta del repositorio remoto no se encuentra o esta mal escrita........";
 		#puede volver a pedir la direccion atra ves		
-		Exit	
+		#Exit
+		echo "volver a introducir la dirección o presionar Ctrl + c para salir de la instalación ........";	
+		PRM
+		ClonarR $direccion_gitremoto_app
 	else 
 		echo "El repositorio se clono correctamente........" ;
 	fi
@@ -84,7 +101,7 @@ function Localisar()
 	if [ "$Ldirectorio" != "" ]
 	then 
 		
-		echo "el archivo se encuentra en el directorio: $Ldirectorio"
+		echo "Archivo localisado, se encuentra en el directorio $Ldirectorio"
 			
 	else 
 		echo "El uarchivo $nombre_archivo no existe en el directorio" ;
@@ -153,34 +170,34 @@ function Msenttings_py()
 	echo "Archivo settings.py configurado........";
 }
 ######################################
-#######################################
-Limpiar_CrearD
+
+
 #pedir parametros
-host='192.168.1.50';
-nombre_usuario_directorio='aser_admin';
+#limpiar................
+Limpiar_CrearD
 
-nombre_app='aser';
-nombre_dir_app='aserprueba';#directorio que contine la app
-
-nombre_user_bd='aser_adminbd2';
-passwd_userbd='JUvX8O08';
-nombre_base_datos='aserdb080814';
-
-direccion_gitremoto_app='https://github.com/GOG1991/aserprueba';
-puerto_nginx='80';
-vercion_python='3.4';
-
-nombre_directorio_usuario="dir$nombre_usuario_directorio$nombre_app";
-nombre_entorno_virtual="entorno$nombre_app";
-
-###############################################
-#modificar el archivo Cgunicor_statrt.sh y rediereccionarlo a carpeta config_r
-Mgunicor_statrt $nombre_app $nombre_directorio_usuario $nombre_entorno_virtual $nombre_dir_app $nombre_usuario_directorio $nombre_gurpo_usuario_directorio
-#modificar el archivo CSapp.conf y rediereccionarlo a carpeta config_r
-Mapp_conf $nombre_app $nombre_directorio_usuario $nombre_entorno_virtual
-#modificar el archivo CNapp.conf y rediereccionarlo a carpeta config_r
-MNapp_conf $nombre_app $nombre_directorio_usuario $nombre_entorno_virtual $puerto_nginx $host
+function PIP()
+{
+	read -p "dame la ip del servidor: " host;
+	#host='192.168.1.50';
+	ssh root@$host -p22 echo "conectando........";
+	if (( "$?" != "0" ))
+	then
+		echo "la conexion fallo, asegurate de introducir la IP del servidor correcta,  preciona Ctrl + c para salir........";
+	PIP
+	else
+		echo "conexion realizada exitosa mente........";
+	fi
+}
+#pedir ip
+PIP
 #clonar el repositorio remoto
+function PRM()
+{
+	read -p "Introduce la direccion del repositorio remoto: " direccion_gitremoto_app;
+direccion_gitremoto_app='https://github.com/GOG1991/aserprueba';
+}
+PRM
 ClonarR $direccion_gitremoto_app
 #localizar los archivos y rutas
 Localisar $manage
@@ -192,6 +209,82 @@ Localisar $requirements
 ObtenerD $Ldirectorio
 ruta_requirements=$Adirectorio;
 Localisar $wsgi
+#pedir nombre de la appp
+function Nomapp()
+{
+	read -p "Dame el nombre de la app: " nombre_app;
+	 nombre_dir_app=$(ls recurso_app/);
+	echo "Directorio base de la app: $nombre_dir_app";
+	Appdirectorio=$(find . -name $nombre_app );
+	if [ "$Appdirectorio" != "" ]
+	then 
+		
+		echo "Nombre localisado, se encuentra en el directorio $Appdirectorio............"
+			
+	else 
+		echo "El Nombre $nombre_app de la alicasion no conincide. asegurese de que la aplicacion contenga la estrutura requerida........";
+		Exit 
+	fi
+	nombre_entorno_virtual="entorno$nombre_app";
+	echo "el entrono virtual se llamara: $nombre_entorno_virtual"; 
+}
+Nomapp
+##################
+function PideNUseryApp()
+{
+	read -p "Dame el nombre del Usuario para la aplicasion: " nombre_usuario_directorio;
+	#nombre_usuario_directorio='aser_admin';
+	
+}
+function CreaUserDir()
+{
+	
+	nombre_directorio_usuario="dir$nombre_usuario_directorio$nombre_app";
+	
+	ssh root@$host -P22 useradd -d /home/$nombre_directorio_usuario -m -s /sbin/nologin $nombre_usuario_directorio
+	if [ "$?" -ne "0" ]
+	then 
+		echo "el usuario $nombre_usuario_directorio ya existe dame otro nombre, introduce Ctrl +c para salir";
+		PideNUseryApp
+		CreaUserDir 	
+	else 
+		echo "El usuario $nombre_usuario_directorio se creo correctamente........" ;
+	fi
+
+}
+
+#pide usuario de app
+PideNUseryApp
+#crea usuario de app
+CreaUserDir 
+
+
+
+
+
+nombre_dir_app='aserprueba';#directorio que contine la app
+read -p "Dame el nombre del usuario de la base de datos: " nombre_user_bd;
+nombre_user_bd='aser_adminbd2';
+read -p "dame el passwd del usuario de la base de datos: " passwd_userbd;
+passwd_userbd='JUvX8O08';
+read -p "dame el nobre de la base de datos: " nombre_base_datos;
+nombre_base_datos='aserdb080814';
+
+read -p "Dame el puerto por el cual escucha Nginx: " puerto_nginx;
+puerto_nginx='80';
+read -p "Dame el numero de la vercion de Python pudeser 2.7, 3.0, 3.4 : " vercion_python;
+vercion_python='3.4';
+
+
+#ssh $userservidor@$dominio -p$puerto 'apt-get update'
+###############################################
+#modificar el archivo Cgunicor_statrt.sh y rediereccionarlo a carpeta config_r
+Mgunicor_statrt $nombre_app $nombre_directorio_usuario $nombre_entorno_virtual $nombre_dir_app $nombre_usuario_directorio $nombre_gurpo_usuario_directorio
+#modificar el archivo CSapp.conf y rediereccionarlo a carpeta config_r
+Mapp_conf $nombre_app $nombre_directorio_usuario $nombre_entorno_virtual
+#modificar el archivo CNapp.conf y rediereccionarlo a carpeta config_r
+MNapp_conf $nombre_app $nombre_directorio_usuario $nombre_entorno_virtual $puerto_nginx $host
+
 #revisar que el archivo senttings 
 Rsenttings_py
 #modificar el fichero senttings.py y redirecionarlo a config_app
