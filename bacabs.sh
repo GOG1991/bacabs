@@ -1,9 +1,5 @@
 #!/bin/bash
 #script para realizar dployd
-
-####################
-#######################################
-
 #variables
 host='';
 nombre_usuario_directorio='';
@@ -21,7 +17,8 @@ requirements='requirements.txt';
 wsgi='wsgi.py';
 Ldirectorio='';
 Adirectorio='';
-
+nasuper='';
+nanginx='';
 ###FUNCIONES
 function Limpiar_D()
 {
@@ -64,6 +61,7 @@ function Mapp_conf()
 	sed -e 's/n0app/'$1'/g' -e 's/n1cuser/'$2'/g' -e 's/n2nentor/'$3'/g' recurso_config/CSapp.conf > config_r/CS$nombre_app$nombre_usuario_directorio.conf;
 
 	echo "Archivo CS$nombre_app$nombre_usuario_directorio.conf creado........";
+nasuper="CS$nombre_app$nombre_usuario_directorio.conf";
 }
 function MNapp_conf()
 {
@@ -71,8 +69,8 @@ function MNapp_conf()
 	sed -e 's/n0app/'$1'/g' -e 's/n1cuser/'$2'/g' -e 's/n2nentor/'$3'/g' -e 's/n6puerte/'$4'/g' -e 's/n7host/'$5'/g' recurso_config/CNapp.conf > config_r/CN$nombre_app$nombre_usuario_directorio.conf;
 
 	echo "Archivo CN$nombre_app$nombre_usuario_directorio.conf creado........";
+nanginx="CN$nombre_app$nombre_usuario_directorio.conf";
 }
-
 function ClonarR()
 {
 	echo "clonando el repositorio........";
@@ -164,15 +162,12 @@ function Msenttings_py()
 	echo $staticroot;
 	mediaroot=$(sed -n -e '/MEDIA_ROOT/p' $loc_settings);
 	echo $mediaroot;
-	sed -e "s:$staticroot:STATIC_ROOT = '/home/$nombre_directorio_usuario/$nombre_entorno_virtual/static/':g" -e "s:$mediaroot:MEDIA_ROOT = '/home/$nombre_directorio_usuario/$nombre_entorno_virtual/media/':g" $loc_settings > config_app/settings.py	
-	#sed -e "s:$staticroot:STATIC_ROOT = '/home/$nombre_directorio_usuario/$nombre_entorno_virtual/static/':g" -e "s:$mediaroot:MEDIA_ROOT = '/home/$nombre_directorio_usuario/$nombre_entorno_virtual/static/':g" $loc_settings > config_app/settings.py;
+	sed -e "s:$staticroot:STATIC_ROOT = '/home/$nombre_directorio_usuario/$nombre_entorno_virtual/static/':g" -e "s:$mediaroot:MEDIA_ROOT = '/home/$nombre_directorio_usuario/$nombre_entorno_virtual/media/':g" $loc_settings > config_app/settings.py
 	echo "Archivo settings.py configurado........";
 }
 ######################################
 #pedir parametros
-#limpiar................
 Limpiar_CrearD
-
 function PIP()
 {
 	read -p "dame la ip del servidor: " host;
@@ -249,7 +244,6 @@ function CreaUserDir()
 	fi
 
 }
-
 #pide usuario de app
 PideNUseryApp
 #crea usuario de app
@@ -290,6 +284,8 @@ MNapp_conf $nombre_app $nombre_directorio_usuario $nombre_entorno_virtual $puert
 #Rsenttings_py
 #modificar el fichero senttings.py y redirecionarlo a config_app
 Msenttings_py
+rm recurso_app/$nombre_dir_app/$nombre_app/settings.py
+cp config_app/settings.py recurso_app/$nombre_dir_app/$nombre_app/
 #comensar con la actualizacion del sistema
 function ActualizarSO()
 {
@@ -302,8 +298,8 @@ function ActualizarSO()
 		Exit
 	fi
 }
-#ActualizarSO update
-#ActualizarSO upgrade
+ActualizarSO update
+ActualizarSO upgrade
 #instalar dependencias
 function InstalarD()
 {
@@ -316,19 +312,19 @@ function InstalarD()
 		Exit
 	fi
 }
-#InstalarD libpq-dev
-#InstalarD python-dev
-#InstalarD python-setuptools
-#InstalarD python3-dev 
-#InstalarD python3-setuptools
-#InstalarD build-essential 
-#InstalarD python-imaging
-#InstalarD libjpeg-dev
-#InstalarD libjpeg8-dev
-#InstalarD libfreetype6
-#InstalarD libfreetype6-dev
-#InstalarD zlib1g-dev
-#InstalarD zlib1g-dev
+InstalarD libpq-dev
+InstalarD python-dev
+InstalarD python-setuptools
+InstalarD python3-dev 
+InstalarD python3-setuptools
+InstalarD build-essential 
+InstalarD python-imaging
+InstalarD libjpeg-dev
+InstalarD libjpeg8-dev
+InstalarD libfreetype6
+InstalarD libfreetype6-dev
+InstalarD zlib1g-dev
+InstalarD zlib1g-dev
 
 #crear enlaces sinbolicos
 function InstalaE()
@@ -358,7 +354,7 @@ function InstalaE()
 		
 	fi
 }
-#InstalaE 
+InstalaE 
 #instalar servicios 
 function InstalaS()
 {
@@ -372,23 +368,106 @@ function InstalaS()
 	fi
 }
 	
-#InstalaS supervisor
-#InstalaS nginx
-#InstalaS postgresql 
-#InstalaS postgresql-contrib 
-#InstalaS git
-#InstalaS python-virtualenv 
-#InstalaS ufw 
+InstalaS supervisor
+InstalaS nginx
+InstalaS postgresql 
+InstalaS postgresql-contrib 
+InstalaS git
+InstalaS python-virtualenv 
+InstalaS ufw 
 #configurar posgressql
 #remplasar archivo senttings por el modificado
 #crear entorno virtual 
 ssh root@$host -p22 virtualenv /home/$nombre_directorio_usuario/$nombre_entorno_virtual -p /usr/bin/python$vercion_python
 #activar entrono y mandar repositorio repositorio
-ssh root@$host -p22 source /home/$nombre_directorio_usuario/$nombre_entorno_virtual/bin/activate
-#scp -r recurso_app/* root@$host:/home/$nombre_directorio_usuario/$nombre_entorno_virtual
+#ssh root@$host -p22 source /home/$nombre_directorio_usuario/$nombre_entorno_virtual/bin/activate
+scp -r recurso_app/* root@$host:/home/$nombre_directorio_usuario/$nombre_entorno_virtual
+#instalar requiremens.txt
+function MInsR()
+{
+	echo " preparando el archivo InsR.sh para la configurarcion........";
+	sed -e 's/nombre_directorio_usuario/'$1'/g' -e 's/nombre_entorno_virtual/'$2'/g' -e 's/nombre_dir_app/'$3'/g' -e 's/hostx/'$4'/g' recurso_config/InsR.sh > config_r/InsR.sh
+	echo "Archivo InsR.sh creado........";
+}
+MInsR $nombre_directorio_usuario $nombre_entorno_virtual $nombre_dir_app $host
+
+scp config_r/InsR.sh root@$host:/home/$nombre_directorio_usuario
+#dar permisos de ejecucion
+ssh root@$host -p22 chmod 755 /home/$nombre_directorio_usuario/InsR.sh
+ssh root@$host -p22 . /home/$nombre_directorio_usuario/InsR.sh
+ssh root@$host -p22 rm -r /home/$nombre_directorio_usuario/InsR.sh
+
+function MDirG()
+{
+	echo " preparando el archivo InsR.sh para la configurarcion........";
+	sed -e 's/nombre_directorio_usuario/'$1'/g' -e 's/nombre_entorno_virtual/'$2'/g' -e 's/nombre_dir_app/'$3'/g' -e 's/hostx/'$4'/g' -e 's/nombre_app/'$5'/g' recurso_config/DirG.sh > config_r/DirG.sh
+	echo "Archivo DirG.sh creado........";
+}
+MDirG $nombre_directorio_usuario $nombre_entorno_virtual $nombre_dir_app $host $nombre_app
+scp config_r/DirG.sh root@$host:/home/$nombre_directorio_usuario
+#dar permisos de ejecucion
+ssh root@$host -p22 chmod 755 /home/$nombre_directorio_usuario/DirG.sh
+ssh root@$host -p22 . /home/$nombre_directorio_usuario/DirG.sh
+ssh root@$host -p22 rm -r /home/$nombre_directorio_usuario/DirG.sh
+#------------------------------------------------------*
+#ssh root@$host -p22 pip freeze
+#python manage.py runserver 104.131.3.169:8000
+#echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+#ssh root@$host -p22 python /home/$nombre_directorio_usuario/$nombre_entorno_virtual/$nombre_dir_app/manage.py runserver $host:8000
+#*********************************************************
+#sincornisar bd
+
+#ssh root@$host -p22 python /home/$nombre_directorio_usuario/$nombre_entorno_virtual/$nombre_dir_app/manage.py syncdb
+#migrar bases de datos
+#ssh root@$host -p22 python /home/$nombre_directorio_usuario/$nombre_entorno_virtual/$nombre_dir_app/manage.py migrate --fake
+#-----------------------------------------------------------*
 #crear directorios dentro del entorno virtual
 ssh root@$host -p22 mkdir /home/$nombre_directorio_usuario/$nombre_entorno_virtual/logs
-ssh root@$host -p22 mkdir /home/$nombre_directorio_usuario/$nombre_entorno_virtual/run
+#ssh root@$host -p22 mkdir /home/$nombre_directorio_usuario/$nombre_entorno_virtual/run
 ssh root@$host -p22 mkdir /home/$nombre_directorio_usuario/$nombre_entorno_virtual/media
 ssh root@$host -p22 mkdir /home/$nombre_directorio_usuario/$nombre_entorno_virtual/static
+#guardar el archivo Cgunicorn_start.sh en bin
+scp config_r/Cgunicorn_start.sh root@$host:/home/$nombre_directorio_usuario/$nombre_entorno_virtual/bin
+#dar permisos de ejecucion
+ssh root@$host -p22 chmod 755 /home/$nombre_directorio_usuario/$nombre_entorno_virtual/bin/Cgunicorn_start.sh
+echo "..."
+ssh root@$host -p22 . /home/$nombre_directorio_usuario/$nombre_entorno_virtual/bin/Cgunicorn_start.sh
+# bin/gunicorn_start
+#ssh root@$host -p22 bin /home/$nombre_directorio_usuario/$nombre_entorno_virtual/bin/Cgunicorn_start.sh
+#ssh root@$host -p22 deactivate
+# bin/gunicorn_start
+#configurar supervisor
+# cd /etc/supervisor/conf.d/ 
+ssh root@$host -p22 mkdir -p /etc/supervisor/conf.d/
+	ssh root@$host -p22 rm -r -f /etc/supervisor/conf.d/*
+scp config_r/$nasuper root@$host:/etc/supervisor/conf.d/
+ssh root@$host -p22 supervisorctl reread 
+ssh root@$host -p22 supervisorctl update
+ssh root@$host -p22 supervisorctl status $nombre_app
+ssh root@$host -p22 supervisorctl stop $nombre_app
+ssh root@$host -p22 supervisorctl start $nombre_app 
+ssh root@$host -p22 supervisorctl restart $nombre_app
+#configurar Nginx
+ssh root@$host -p22 service nginx start
+#ssh root@$host -p22 mkdir -p /etc/nginx/sites-available
+ssh root@$host -p22 mkdir -p /etc/nginx/sites-enabled
+ssh root@$host -p22 rm -r -f /etc/nginx/sites-available/*
+ssh root@$host -p22 rm -r -f /etc/nginx/sites-enabled/*
+scp config_r/$nanginx root@$host:/etc/nginx/sites-available/
+echo "----------->$nanginx ";
+ssh root@$host -p22 ln -s /etc/nginx/sites-available/$nanginx /etc/nginx/sites-enabled/$nanginx
+ssh root@$host -p22 service nginx restart
+#ssh root@$host -p22 reboot
+function MIporSM()
+{
+	echo " preparando el archivo IporSM.sh para la configurarcion........";
+	sed -e 's/nombre_directorio_usuario/'$1'/g' -e 's/nombre_entorno_virtual/'$2'/g' -e 's/nombre_dir_app/'$3'/g' recurso_config/IporSM.sh > config_r/IporSM.sh
+	echo "Archivo IporSM.sh creado........";
+}
+MIporSM $nombre_directorio_usuario $nombre_entorno_virtual $nombre_dir_app
+scp config_r/IporSM.sh root@$host:/home/$nombre_directorio_usuario
+#dar permisos de ejecucion
+ssh root@$host -p22 chmod 755 /home/$nombre_directorio_usuario/IporSM.sh
+ssh root@$host -p22 . /home/$nombre_directorio_usuario/IporSM.sh
+ssh root@$host -p22 rm -r /home/$nombre_directorio_usuario/IporSM.sh
 #/////////////////////
